@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>FileVault — File Manager</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--bg:#05080c;--s1:#0c1117;--s2:#111920;--s3:#172130;--border:#1c2d3d;--border2:#243a4e;--cyan:#00e5ff;--green:#00ff9d;--orange:#ff6b2b;--red:#ff3b5c;--yellow:#ffd60a;--text:#dde8f0;--muted:#4a7a8a;--dim:#1e3545;--glow:0 0 40px rgba(0,229,255,.12);}
+html{scroll-behavior:smooth;}
+body{font-family:'JetBrains Mono',monospace;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,229,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,255,.025) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0;}
+.orb{position:fixed;border-radius:50%;filter:blur(100px);opacity:.12;pointer-events:none;z-index:0;animation:orb 15s ease-in-out infinite;}
+.o1{width:600px;height:600px;background:radial-gradient(circle,var(--cyan),transparent);top:-200px;left:-200px;}
+.o2{width:500px;height:500px;background:radial-gradient(circle,var(--green),transparent);bottom:-200px;right:-200px;animation-delay:5s;}
+.o3{width:300px;height:300px;background:radial-gradient(circle,var(--orange),transparent);top:50%;left:60%;animation-delay:10s;}
+@keyframes orb{0%,100%{transform:scale(1) translate(0,0);}33%{transform:scale(1.1) translate(20px,-20px);}66%{transform:scale(.9) translate(-15px,15px);};}
+.wrap{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:0 20px 80px;}
+header{display:flex;align-items:center;justify-content:space-between;padding:24px 0 32px;border-bottom:1px solid var(--border);}
+.logo{display:flex;align-items:center;gap:14px;}
+.lm{width:44px;height:44px;background:linear-gradient(135deg,var(--cyan),var(--green));border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;animation:gp 3s ease-in-out infinite;box-shadow:0 0 30px rgba(0,229,255,.3);}
+@keyframes gp{0%,100%{box-shadow:0 0 30px rgba(0,229,255,.3);}50%{box-shadow:0 0 60px rgba(0,229,255,.5);};}
+.ln{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;background:linear-gradient(90deg,var(--cyan),var(--green));-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:-1px;}
+.ls{font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:2px;}
+.pill{display:flex;align-items:center;gap:8px;padding:8px 18px;border:1px solid var(--border);border-radius:100px;font-size:11px;background:var(--s1);transition:all .3s;}
+.pill.ok{border-color:rgba(0,255,157,.3);background:rgba(0,255,157,.05);}
+.pill.er{border-color:rgba(255,59,92,.3);background:rgba(255,59,92,.05);}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--red);animation:blink 2s infinite;flex-shrink:0;}
+.dot.ok{background:var(--green);}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.3;};}
+.dbb{display:none;align-items:center;gap:10px;padding:12px 18px;border-radius:10px;margin:16px 0;font-size:12px;line-height:1.6;}
+.dbb.local{background:rgba(0,229,255,.06);border:1px solid rgba(0,229,255,.2);color:var(--cyan);}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:28px 0;}
+.stat{background:var(--s1);border:1px solid var(--border);border-radius:14px;padding:18px 20px;position:relative;overflow:hidden;transition:border-color .3s;}
+.stat:hover{border-color:var(--border2);}
+.stat::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--cyan),var(--green));opacity:0;transition:opacity .3s;}
+.stat:hover::before{opacity:1;}
+.sv{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;line-height:1;margin-bottom:6px;}
+.sv.c{background:linear-gradient(135deg,var(--cyan),var(--green));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.sv.o{background:linear-gradient(135deg,var(--orange),var(--yellow));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.sv.g{background:linear-gradient(135deg,var(--green),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.sv.r{background:linear-gradient(135deg,var(--red),var(--orange));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.sl{font-size:10px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:24px;}
+.tab{padding:10px 22px;font-family:'Syne',sans-serif;font-size:13px;font-weight:600;color:var(--muted);background:none;border:none;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;margin-bottom:-1px;letter-spacing:.5px;text-transform:uppercase;}
+.tab:hover{color:var(--text);}.tab.on{color:var(--cyan);border-bottom-color:var(--cyan);}
+.panel{display:none;animation:up .3s ease;}.panel.on{display:block;}
+@keyframes up{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);};}
+.zone{border:2px dashed var(--border2);border-radius:18px;padding:64px 30px;text-align:center;cursor:pointer;transition:all .3s;background:linear-gradient(135deg,var(--s1),var(--s2));}
+.zone:hover,.zone.over{border-color:var(--cyan);box-shadow:var(--glow);}
+.zone.over{border-style:solid;transform:scale(1.005);}
+.zico{font-size:60px;display:block;margin-bottom:20px;animation:float 4s ease-in-out infinite;filter:drop-shadow(0 0 20px rgba(0,229,255,.3));}
+@keyframes float{0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);};}
+.zt{font-family:'Syne',sans-serif;font-size:22px;font-weight:700;margin-bottom:10px;}
+.zs{font-size:12px;color:var(--muted);line-height:1.9;}.zs em{color:var(--cyan);font-style:normal;text-decoration:underline;text-underline-offset:3px;}
+#fi{display:none;}
+.sel{margin-top:16px;display:flex;flex-direction:column;gap:8px;}
+.si{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--s2);border:1px solid var(--border);border-radius:10px;animation:up .2s ease;}
+.si-ico{font-size:22px;flex-shrink:0;}.si-info{flex:1;min-width:0;}
+.si-nm{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.si-sz{font-size:11px;color:var(--muted);margin-top:2px;}
+.si-rm{background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;padding:2px 6px;border-radius:4px;line-height:1;transition:color .2s;}.si-rm:hover{color:var(--red);}
+.pw{height:3px;background:var(--s3);border-radius:100px;overflow:hidden;margin-top:14px;display:none;}
+.pb{height:100%;background:linear-gradient(90deg,var(--cyan),var(--green));border-radius:100px;width:0%;transition:width .4s ease;position:relative;}
+.pb::after{content:'';position:absolute;top:0;left:-60%;width:60%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.5),transparent);animation:sw 1.2s ease-in-out infinite;}
+@keyframes sw{to{left:160%;};}
+.ua{display:flex;gap:10px;margin-top:14px;}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:11px 22px;border-radius:10px;border:none;cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:500;transition:all .2s;white-space:nowrap;text-transform:uppercase;letter-spacing:.8px;}
+.bc{background:linear-gradient(135deg,var(--cyan),#00b8d4);color:#000;font-weight:700;}.bc:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,229,255,.3);}
+.bg{background:transparent;color:var(--muted);border:1px solid var(--border);}.bg:hover{border-color:var(--cyan);color:var(--cyan);}
+.br{background:transparent;color:var(--red);border:1px solid var(--red);}.br:hover{background:rgba(255,59,92,.1);}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none!important;box-shadow:none!important;}
+.bs{padding:7px 14px;font-size:11px;}
+.lh{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px;}
+.lt{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);}
+.sr{display:flex;gap:10px;}
+.sinp{background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:9px 16px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:12px;outline:none;transition:border-color .2s;width:240px;}
+.sinp:focus{border-color:var(--cyan);}.sinp::placeholder{color:var(--dim);}
+.ft{width:100%;border-collapse:collapse;}
+.ft th{text-align:left;padding:10px 16px;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);background:var(--s1);}
+.ft th:first-child{border-radius:8px 0 0 0;}.ft th:last-child{border-radius:0 8px 0 0;}
+.fr{border-bottom:1px solid var(--border);transition:background .15s;}.fr:hover{background:var(--s1);}
+.fr td{padding:14px 16px;vertical-align:middle;}
+.fic{display:flex;align-items:center;gap:12px;}
+.fio{width:38px;height:38px;border-radius:8px;background:var(--s2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.fn{font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:260px;}
+.fid{font-size:10px;color:var(--dim);cursor:pointer;margin-top:2px;transition:color .2s;}.fid:hover{color:var(--cyan);}
+.badge{display:inline-block;padding:3px 8px;border-radius:4px;font-size:10px;font-weight:500;letter-spacing:.5px;}
+.bi{background:rgba(0,229,255,.1);color:var(--cyan);}.bp{background:rgba(255,59,92,.1);color:var(--red);}
+.bd{background:rgba(0,255,157,.1);color:var(--green);}.bv{background:rgba(255,107,43,.1);color:var(--orange);}
+.ba{background:rgba(255,214,10,.1);color:var(--yellow);}.bo{background:rgba(74,122,138,.1);color:var(--muted);}
+.ab{display:flex;gap:6px;}
+.ib{width:30px;height:30px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;transition:all .2s;}
+.ib.v:hover{border-color:var(--cyan);color:var(--cyan);background:rgba(0,229,255,.07);}
+.ib.d:hover{border-color:var(--green);color:var(--green);background:rgba(0,255,157,.07);}
+.ib.x:hover{border-color:var(--red);color:var(--red);background:rgba(255,59,92,.07);}
+.empty{text-align:center;padding:60px 20px;}
+.ei{font-size:52px;display:block;margin-bottom:18px;opacity:.4;}
+.et{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--dim);margin-bottom:8px;}
+.es{font-size:12px;color:var(--muted);}
+.pag{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:20px;padding-top:20px;border-top:1px solid var(--border);}
+.pi{font-size:11px;color:var(--muted);}
+.ld{text-align:center;padding:50px;}
+.spin{width:28px;height:28px;border:2px solid var(--border2);border-top-color:var(--cyan);border-radius:50%;animation:spin .7s linear infinite;display:inline-block;}
+@keyframes spin{to{transform:rotate(360deg);};}
+.toasts{position:fixed;bottom:24px;right:24px;z-index:1000;display:flex;flex-direction:column;gap:10px;}
+.toast{display:flex;align-items:center;gap:12px;padding:14px 20px;background:var(--s1);border:1px solid var(--border);border-radius:12px;font-size:12px;min-width:280px;max-width:420px;box-shadow:0 10px 40px rgba(0,0,0,.5);animation:tin .3s ease;position:relative;overflow:hidden;}
+@keyframes tin{from{opacity:0;transform:translateX(110%);}to{opacity:1;transform:translateX(0);};}
+.toast::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;}
+.tok::before{background:var(--green);}.ter::before{background:var(--red);}.tin::before{background:var(--cyan);}
+.tico{font-size:18px;flex-shrink:0;}.tmsg{flex:1;color:var(--text);line-height:1.4;}
+.mb{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);z-index:500;display:none;align-items:center;justify-content:center;}
+.mb.on{display:flex;}
+.modal{background:var(--s1);border:1px solid var(--border);border-radius:18px;padding:36px;max-width:440px;width:90%;animation:mIn .3s ease;}
+@keyframes mIn{from{opacity:0;transform:scale(.92);}to{opacity:1;transform:scale(1);};}
+.modal-ico{font-size:42px;margin-bottom:14px;display:block;}
+.modal-t{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;margin-bottom:10px;color:var(--red);}
+.modal-txt{font-size:12px;color:var(--muted);line-height:1.8;margin-bottom:24px;}
+.modal-act{display:flex;gap:12px;justify-content:flex-end;}
+@media(max-width:768px){.stats{grid-template-columns:repeat(2,1fr);}.ft th:nth-child(3),.ft td:nth-child(3),.ft th:nth-child(4),.ft td:nth-child(4){display:none;}.sinp{width:140px;}.fn{max-width:140px;}}
+</style>
+</head>
+<body>
+<div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div>
+<div class="toasts" id="toasts"></div>
+<div class="mb" id="modal">
+  <div class="modal">
+    <span class="modal-ico">⚠️</span>
+    <div class="modal-t">Delete File</div>
+    <div class="modal-txt" id="modalTxt">Are you sure?</div>
+    <div class="modal-act">
+      <button class="btn bg" onclick="closeMod()">Cancel</button>
+      <button class="btn br" onclick="doDel()">🗑 Delete</button>
+    </div>
+  </div>
+</div>
+<div class="wrap">
+  <header>
+    <div class="logo">
+      <div class="lm">📁</div>
+      <div><div class="ln">FileVault</div><div class="ls">Multer · GridFS · Local Storage</div></div>
+    </div>
+    <div class="pill" id="pill"><div class="dot" id="dot"></div><span id="stxt">Connecting…</span></div>
+  </header>
+  <div class="dbb local" id="dbb" style="display:flex;">
+    ✅ &nbsp;<span>Running <strong>100% locally</strong> — No internet needed. Files saved to <code>./data/</code> folder and persist between restarts.</span>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="sv c" id="sTotal">—</div><div class="sl">Total Files</div></div>
+    <div class="stat"><div class="sv o" id="sSize">—</div><div class="sl">Storage Used</div></div>
+    <div class="stat"><div class="sv g" id="sToday">0</div><div class="sl">Uploaded Today</div></div>
+    <div class="stat"><div class="sv r" id="sTypes">—</div><div class="sl">File Types</div></div>
+  </div>
+  <div class="tabs">
+    <button class="tab on" onclick="goTab('upload',this)">⬆ Upload</button>
+    <button class="tab" onclick="goTab('files',this)">📋 All Files</button>
+    <button class="tab" onclick="goTab('search',this)">🔍 Search</button>
+  </div>
+  <div class="panel on" id="p-upload">
+    <div class="zone" id="zone" ondragover="dov(event)" ondragleave="dlv(event)" ondrop="ddr(event)" onclick="document.getElementById('fi').click()">
+      <span class="zico">📂</span>
+      <div class="zt">Drop Files Here</div>
+      <div class="zs">or <em onclick="event.stopPropagation();document.getElementById('fi').click()">click to browse</em><br/>Images · PDF · Word · Text · Video · Audio · ZIP<br/>Max 10MB each · Up to 10 files at once</div>
+      <input type="file" id="fi" multiple onchange="onSel(event)"/>
+    </div>
+    <div class="sel" id="sel"></div>
+    <div class="pw" id="pw"><div class="pb" id="pb"></div></div>
+    <div class="ua" id="ua" style="display:none;">
+      <button class="btn bc" id="upBtn" onclick="doUp()" style="flex:1;">⬆ Upload Files</button>
+      <button class="btn bg" onclick="clrSel()">✕ Clear</button>
+    </div>
+  </div>
+  <div class="panel" id="p-files">
+    <div class="lh">
+      <div class="lt">All Files <span id="totBadge" style="color:var(--cyan);font-size:12px;"></span></div>
+      <button class="btn bg bs" onclick="loadFiles()">↻ Refresh</button>
+    </div>
+    <div id="fileList"></div>
+    <div class="pag" id="pag" style="display:none;">
+      <button class="btn bg bs" id="prevBtn" onclick="goPage(-1)">← Prev</button>
+      <span class="pi" id="pagInfo"></span>
+      <button class="btn bg bs" id="nextBtn" onclick="goPage(1)">Next →</button>
+    </div>
+  </div>
+  <div class="panel" id="p-search">
+    <div class="lh">
+      <div class="lt">Search Files</div>
+      <div class="sr">
+        <input class="sinp" id="sq" placeholder="Type filename…" onkeyup="if(event.key==='Enter')doSearch()"/>
+        <button class="btn bc bs" onclick="doSearch()">🔍 Search</button>
+      </div>
+    </div>
+    <div id="sRes"><div class="empty"><span class="ei">🔍</span><div class="et">Search your files</div><div class="es">Type a filename and press Enter</div></div></div>
+  </div>
+</div>
+<script>
+const API='/api/files';
+let selFiles=[],curPage=1,totPages=1,todayCnt=0,delId=null,delName='';
+
+window.onload=async()=>{await checkHealth();await loadStats();loadFiles();};
+
+async function checkHealth(){
+  try{const d=await fetch('/health').then(r=>r.json());
+    if(d.success){document.getElementById('dot').classList.add('ok');document.getElementById('stxt').textContent='Server Online ✓';document.getElementById('pill').classList.add('ok');}}
+  catch{document.getElementById('stxt').textContent='Server Offline';document.getElementById('pill').classList.add('er');}
+}
+
+async function loadStats(){
+  try{const d=await fetch(`${API}/stats`).then(r=>r.json());
+    if(!d.success)return;
+    document.getElementById('sTotal').textContent=d.data.totalFiles;
+    document.getElementById('sSize').textContent=d.data.totalSizeFormatted;
+    document.getElementById('sTypes').textContent=Object.keys(d.data.fileTypes).length||'0';}
+  catch{}
+}
+
+function goTab(name,btn){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.getElementById('p-'+name).classList.add('on');btn.classList.add('on');
+  if(name==='files')loadFiles();
+}
+
+function dov(e){e.preventDefault();document.getElementById('zone').classList.add('over');}
+function dlv(){document.getElementById('zone').classList.remove('over');}
+function ddr(e){e.preventDefault();dlv();addFiles(Array.from(e.dataTransfer.files));}
+function onSel(e){addFiles(Array.from(e.target.files));e.target.value='';}
+
+function addFiles(files){
+  const ex=new Set(selFiles.map(f=>f.name+f.size));
+  selFiles=[...selFiles,...files.filter(f=>!ex.has(f.name+f.size))].slice(0,10);
+  renderSel();
+}
+
+function renderSel(){
+  const el=document.getElementById('sel'),ua=document.getElementById('ua');
+  if(!selFiles.length){el.innerHTML='';ua.style.display='none';return;}
+  el.innerHTML=selFiles.map((f,i)=>`<div class="si"><span class="si-ico">${ico(f.type)}</span><div class="si-info"><div class="si-nm">${esc(f.name)}</div><div class="si-sz">${fsz(f.size)}</div></div><button class="si-rm" onclick="rmF(${i})">✕</button></div>`).join('');
+  ua.style.display='flex';
+}
+
+function rmF(i){selFiles.splice(i,1);renderSel();}
+function clrSel(){selFiles=[];renderSel();}
+
+async function doUp(){
+  if(!selFiles.length)return;
+  const btn=document.getElementById('upBtn'),pw=document.getElementById('pw'),pb=document.getElementById('pb');
+  btn.disabled=true;btn.innerHTML='<div class="spin"></div> Uploading…';
+  pw.style.display='block';pb.style.width='15%';
+  try{
+    let cnt=0;
+    if(selFiles.length===1){
+      const fd=new FormData();fd.append('file',selFiles[0]);pb.style.width='55%';
+      const d=await fetch(`${API}/upload`,{method:'POST',body:fd}).then(r=>r.json());
+      if(!d.success)throw new Error(d.error?.message||'Upload failed');cnt=1;
+    }else{
+      const fd=new FormData();selFiles.forEach(f=>fd.append('files',f));pb.style.width='55%';
+      const d=await fetch(`${API}/upload-multiple`,{method:'POST',body:fd}).then(r=>r.json());
+      if(!d.success)throw new Error(d.error?.message||'Upload failed');cnt=d.count;
+    }
+    pb.style.width='100%';todayCnt+=cnt;document.getElementById('sToday').textContent=todayCnt;
+    setTimeout(()=>{pw.style.display='none';pb.style.width='0%';clrSel();toast(`✅ ${cnt} file${cnt>1?'s':''} uploaded!`,'ok');loadStats();loadFiles();},500);
+  }catch(e){pw.style.display='none';pb.style.width='0%';toast(`❌ ${e.message}`,'er');}
+  finally{btn.disabled=false;btn.innerHTML='⬆ Upload Files';}
+}
+
+async function loadFiles(p=1){
+  curPage=p;const el=document.getElementById('fileList');
+  el.innerHTML='<div class="ld"><div class="spin"></div></div>';
+  try{
+    const d=await fetch(`${API}?page=${p}&limit=15&sort=uploadDate&order=desc`).then(r=>r.json());
+    if(!d.success)throw new Error(d.error?.message);
+    totPages=d.pagination.totalPages;
+    document.getElementById('totBadge').textContent=`(${d.pagination.total})`;
+    document.getElementById('sTotal').textContent=d.pagination.total;
+    renderTable(d.data,el);renderPag(d.pagination);
+  }catch(e){el.innerHTML=`<div class="empty"><span class="ei">❌</span><div class="et">Error</div><div class="es">${esc(e.message)}</div></div>`;}
+}
+
+function renderTable(files,el){
+  if(!files.length){el.innerHTML=`<div class="empty"><span class="ei">📭</span><div class="et">No files yet</div><div class="es">Upload your first file above</div></div>`;return;}
+  el.innerHTML=`<table class="ft"><thead><tr><th>File</th><th>Type</th><th>Size</th><th>Uploaded</th><th>Actions</th></tr></thead><tbody>${files.map(f=>row(f)).join('')}</tbody></table>`;
+}
+
+function row(f){
+  const id=f.id||f._id,nm=esc(f.originalName||f.filename||'Unknown');
+  const dt=f.uploadDate?new Date(f.uploadDate).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'—';
+  return `<tr class="fr" id="row-${id}"><td><div class="fic"><div class="fio">${ico(f.mimeType)}</div><div><div class="fn" title="${nm}">${nm}</div><div class="fid" onclick="cp('${id}','ID copied!')" title="Click to copy">⊞ ${id.slice(0,18)}…</div></div></div></td><td><span class="${tbadge(f.mimeType)}">${tlabel(f.mimeType)}</span></td><td style="color:var(--muted);font-size:12px;">${f.sizeFormatted||fsz(f.size)}</td><td style="color:var(--muted);font-size:12px;">${dt}</td><td><div class="ab"><button class="ib v" title="View" onclick="viewF('${id}')">👁</button><button class="ib d" title="Download" onclick="dlF('${id}','${nm}')">⬇</button><button class="ib x" title="Delete" onclick="openMod('${id}','${nm}')">🗑</button></div></td></tr>`;
+}
+
+function renderPag(p){
+  const el=document.getElementById('pag');
+  if(p.totalPages<=1){el.style.display='none';return;}
+  el.style.display='flex';
+  document.getElementById('pagInfo').textContent=`Page ${p.page} of ${p.totalPages}`;
+  document.getElementById('prevBtn').disabled=!p.hasPrevPage;
+  document.getElementById('nextBtn').disabled=!p.hasNextPage;
+}
+function goPage(d){const np=curPage+d;if(np>=1&&np<=totPages)loadFiles(np);}
+
+async function doSearch(){
+  const q=document.getElementById('sq').value.trim();const el=document.getElementById('sRes');
+  if(!q){el.innerHTML='<div class="empty"><span class="ei">🔍</span><div class="et">Search your files</div><div class="es">Type a filename and press Enter</div></div>';return;}
+  el.innerHTML='<div class="ld"><div class="spin"></div></div>';
+  try{
+    const d=await fetch(`${API}/search?q=${encodeURIComponent(q)}`).then(r=>r.json());
+    if(!d.success)throw new Error(d.error?.message);
+    const wrap=document.createElement('div');
+    if(d.data.length){const lbl=document.createElement('div');lbl.style.cssText='font-size:11px;color:var(--muted);margin-bottom:14px;text-transform:uppercase;letter-spacing:1px;';lbl.textContent=`${d.pagination.total} result${d.pagination.total!==1?'s':''} for "${q}"`;wrap.appendChild(lbl);}
+    const tw=document.createElement('div');renderTable(d.data,tw);wrap.appendChild(tw);
+    el.innerHTML='';el.appendChild(wrap);
+  }catch(e){el.innerHTML=`<div class="empty"><span class="ei">❌</span><div class="et">Search failed</div><div class="es">${esc(e.message)}</div></div>`;}
+}
+
+function viewF(id){window.open(`${API}/${id}`,'_blank');}
+function dlF(id,nm){const a=document.createElement('a');a.href=`${API}/${id}/download`;a.download=nm;document.body.appendChild(a);a.click();document.body.removeChild(a);toast(`⬇ Downloading: ${nm}`,'in');}
+function openMod(id,nm){delId=id;delName=nm;document.getElementById('modalTxt').textContent=`Delete "${nm}" permanently?`;document.getElementById('modal').classList.add('on');}
+function closeMod(){delId=null;document.getElementById('modal').classList.remove('on');}
+
+async function doDel(){
+  if(!delId)return;const id=delId,nm=delName;closeMod();
+  const rowEl=document.getElementById(`row-${id}`);
+  if(rowEl){rowEl.style.transition='all .3s';rowEl.style.opacity='0';rowEl.style.transform='translateX(20px)';}
+  try{
+    const d=await fetch(`${API}/${id}`,{method:'DELETE'}).then(r=>r.json());
+    if(!d.success)throw new Error(d.error?.message);
+    toast(`🗑 "${nm}" deleted`,'ok');setTimeout(()=>{loadFiles(curPage);loadStats();},300);
+  }catch(e){if(rowEl){rowEl.style.opacity='1';rowEl.style.transform='';}toast(`❌ ${e.message}`,'er');}
+}
+
+function ico(m){if(!m)return'📄';if(m.startsWith('image/'))return'🖼️';if(m==='application/pdf')return'📕';if(m.startsWith('video/'))return'🎬';if(m.startsWith('audio/'))return'🎵';if(m.includes('word')||m.includes('document'))return'📝';if(m.includes('zip'))return'🗜️';if(m.startsWith('text/'))return'📃';return'📄';}
+function tbadge(m){if(!m)return'badge bo';if(m.startsWith('image/'))return'badge bi';if(m==='application/pdf')return'badge bp';if(m.includes('word')||m.includes('document'))return'badge bd';if(m.startsWith('video/'))return'badge bv';if(m.startsWith('audio/'))return'badge ba';return'badge bo';}
+function tlabel(m){if(!m)return'FILE';if(m.startsWith('image/'))return'IMAGE';if(m==='application/pdf')return'PDF';if(m.includes('word')||m.includes('document'))return'DOC';if(m.startsWith('video/'))return'VIDEO';if(m.startsWith('audio/'))return'AUDIO';if(m.startsWith('text/'))return'TEXT';if(m.includes('zip'))return'ZIP';return'FILE';}
+function fsz(b){if(!b)return'0 B';const k=1024,s=['B','KB','MB','GB'];const i=Math.floor(Math.log(b)/Math.log(k));return`${parseFloat((b/Math.pow(k,i)).toFixed(1))} ${s[i]}`;}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function cp(t,m){navigator.clipboard.writeText(t).then(()=>toast(`📋 ${m}`,'in'));}
+function toast(msg,type='in'){const ic={ok:'✅',er:'❌',in:'ℹ️'};const c=document.getElementById('toasts');const el=document.createElement('div');el.className=`toast t${type}`;el.innerHTML=`<span class="tico">${ic[type]||'ℹ️'}</span><span class="tmsg">${msg}</span>`;c.appendChild(el);setTimeout(()=>{el.style.transition='all .3s';el.style.opacity='0';el.style.transform='translateX(110%)';setTimeout(()=>el.remove(),300);},3500);}
+document.getElementById('modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeMod();});
+</script>
+</body>
+</html>
